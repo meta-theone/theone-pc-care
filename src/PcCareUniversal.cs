@@ -1218,7 +1218,7 @@ namespace TheOnePcCare
             if (oneDriveRunaway)
                 diagnosis.Text = "OneDrive가 " + s.TopHandleCount.ToString("N0") + "개 자원을 점유했습니다. 안전 정상화 실행을 권장합니다.";
             else if (sttIdleManaged && s.CpuPercent >= 90)
-                diagnosis.Text = "전사 자동관리 상태: " + sttIdleText + ". 입력이 감지되면 현재 짧은 구간을 마친 뒤 CPU 사용을 멈춥니다.";
+                diagnosis.Text = "전사 자동관리 상태: " + sttIdleText + ". 입력이 감지되면 전사 워커를 끝내고 현재 파일은 다음 유휴 시간에 다시 처리합니다.";
             else if (s.CpuPercent >= 90 && lastHotspot.Available)
                 diagnosis.Text = "CPU가 " + s.CpuPercent.ToString("0") + "%입니다. 상위 점유 작업을 확인해 안전 정상화를 실행하세요.";
             else if (s.Maxim.Handles >= 10000 && !s.Maxim.Verified)
