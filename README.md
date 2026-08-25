@@ -8,9 +8,11 @@
 
 [최신 릴리스에서 실행파일 내려받기](https://github.com/meta-theone/theone-pc-care/releases/latest)
 
-- `더원_PC_케어_노트북_v3.0.0.exe`: 노트북 프로필 고정
-- `더원_PC_케어_데스크톱_v3.0.0.exe`: 데스크톱 프로필 고정
-- `더원_PC_케어_자동감지_v3.0.0.exe`: 장치 유형 자동 판별
+- `TheOne-PC-Care-Laptop-v3.0.0.exe`: 노트북 프로필 고정
+- `TheOne-PC-Care-Desktop-v3.0.0.exe`: 데스크톱 프로필 고정
+- `TheOne-PC-Care-Auto-v3.0.0.exe`: 장치 유형 자동 판별
+
+GitHub 호환성을 위해 릴리스 자산은 영문 파일명을 사용합니다. OneDrive 공용 폴더에는 같은 파일을 알아보기 쉬운 한글 이름으로 보관합니다.
 
 설치 과정이 없는 단일 EXE입니다. 처음 실행할 때 Windows SmartScreen이 표시되면 파일 해시와 릴리스 출처를 확인한 뒤 실행하십시오.
 
@@ -55,4 +57,3 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ## 라이선스
 
 MIT License
-

@@ -4,9 +4,9 @@
 
 ### 어떤 파일을 받으면 되나요?
 
-- 노트북은 `더원_PC_케어_노트북_v3.0.0.exe`
-- 일반 데스크톱은 `더원_PC_케어_데스크톱_v3.0.0.exe`
-- 잘 모르겠으면 `더원_PC_케어_자동감지_v3.0.0.exe`
+- 노트북은 `TheOne-PC-Care-Laptop-v3.0.0.exe`
+- 일반 데스크톱은 `TheOne-PC-Care-Desktop-v3.0.0.exe`
+- 잘 모르겠으면 `TheOne-PC-Care-Auto-v3.0.0.exe`
 
 ### 주요 변경
 
