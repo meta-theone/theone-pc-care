@@ -9,7 +9,7 @@ $buildDir = Join-Path $projectDir 'build'
 $distDir = Join-Path $projectDir 'dist'
 $verifyDir = Join-Path $projectDir '검증'
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$version = '3.0.0'
+$version = '3.1.0'
 
 foreach ($folder in @($buildDir, $distDir, $verifyDir)) {
     New-Item -ItemType Directory -Force -Path $folder | Out-Null

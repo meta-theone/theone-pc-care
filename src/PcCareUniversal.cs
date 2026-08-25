@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,8 +28,8 @@ using Microsoft.Win32;
 [assembly: AssemblyProduct("ReOne PC Care")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 ReOne Partners")]
 #endif
-[assembly: AssemblyVersion("3.0.0.0")]
-[assembly: AssemblyFileVersion("3.0.0.0")]
+[assembly: AssemblyVersion("3.1.0.0")]
+[assembly: AssemblyFileVersion("3.1.0.0")]
 
 namespace TheOnePcCare
 {
@@ -60,7 +61,7 @@ namespace TheOnePcCare
         public const string ErrorFileName = "ReOne_PC_Care_Error.txt";
         public const string MutexName = "Local\\ReOnePcCareV2";
 #endif
-        public const string Version = "3.0.0";
+        public const string Version = "3.1.0";
         public const string IconResourceName = "PcCareIcon";
 
         public static string DataDirectory
@@ -1186,11 +1187,18 @@ namespace TheOnePcCare
 
             List<string> protectedActive = s.GetActiveProtectedNames();
             bool oneDriveRunaway = string.Equals(s.TopHandleProcess, "OneDrive", StringComparison.OrdinalIgnoreCase) && OfficeCareEngine.ShouldRestartOneDrive(s.TopHandleCount);
+            bool sttIdleManaged = OfficeCareEngine.IsSttIdlePolicyCurrent();
+            string sttIdleText = OfficeCareEngine.GetSttIdlePolicyDisplay();
             if (oneDriveRunaway)
             {
                 protectedActive.RemoveAll(delegate(string name) { return string.Equals(name, "OneDrive", StringComparison.OrdinalIgnoreCase); });
                 protectedBanner.Text = "OneDrive 자원 폭주 " + s.TopHandleCount.ToString("N0") + "개 — 안전 정상화에서 확인 후 재시작할 수 있습니다.";
                 protectedBanner.BackColor = Palette.RedLight;
+            }
+            else if (sttIdleManaged)
+            {
+                protectedBanner.Text = "전사 자동관리 · " + sttIdleText + " — PC 사용 중에는 멈추고 10분 무입력 후 재개합니다.";
+                protectedBanner.BackColor = Palette.TealLight;
             }
             else if (protectedActive.Count > 0)
             {
@@ -1202,13 +1210,15 @@ namespace TheOnePcCare
                 protectedBanner.Text = "보호 대상 작업이 현재 실행 중이 아닙니다. 안전 정상화는 사용자 파일을 삭제하지 않습니다.";
                 protectedBanner.BackColor = Palette.TealLight;
             }
-            protectedList.Text = "항상 보호: 문서 · Google Drive · Windows 보안 · CHKDSK · 브라우저 · Office / 중요 작업은 별도 확인";
+            protectedList.Text = "항상 보호: 문서 · Google Drive · Windows 보안 · CHKDSK · 브라우저 · Office / 전사 작업은 10분 유휴 자동관리";
             cpuHotspotLabel.Text = lastHotspot.Available
                 ? "실시간 CPU 상위 · " + lastHotspot.Summary
                 : "실시간 CPU 상위를 측정하고 있습니다.";
 
             if (oneDriveRunaway)
                 diagnosis.Text = "OneDrive가 " + s.TopHandleCount.ToString("N0") + "개 자원을 점유했습니다. 안전 정상화 실행을 권장합니다.";
+            else if (sttIdleManaged && s.CpuPercent >= 90)
+                diagnosis.Text = "전사 자동관리 상태: " + sttIdleText + ". 입력이 감지되면 현재 짧은 구간을 마친 뒤 CPU 사용을 멈춥니다.";
             else if (s.CpuPercent >= 90 && lastHotspot.Available)
                 diagnosis.Text = "CPU가 " + s.CpuPercent.ToString("0") + "%입니다. 상위 점유 작업을 확인해 안전 정상화를 실행하세요.";
             else if (s.Maxim.Handles >= 10000 && !s.Maxim.Verified)
@@ -1246,7 +1256,7 @@ namespace TheOnePcCare
             if (MessageBox.Show(message, "PC 안전 정상화", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
             {
                 bool pauseStt = false;
-                if (OfficeCareEngine.IsSttTranscriptionActive())
+                if (OfficeCareEngine.IsSttTranscriptionActive() && !OfficeCareEngine.IsSttIdlePolicyCurrent())
                 {
                     DialogResult sttChoice = MessageBox.Show(
                         "법률 녹취 자동전사(STT)가 실행 중입니다. 이 작업은 CPU를 많이 사용하지만 중요한 작업이라 자동 종료하지 않습니다.\r\n\r\n예: 이번에는 일시중지 — 원본과 완료된 전사본은 보존되고 다음 로그인 때 이어받음\r\n아니요: 계속 보호 — CPU 사용량이 높게 유지될 수 있음",
@@ -2822,6 +2832,7 @@ namespace TheOnePcCare
             int explorerThreads;
             GetExplorerLoad(out explorerHandles, out explorerThreads);
             bool sttActive = IsSttTranscriptionActive();
+            bool sttIdleManaged = IsSttIdlePolicyCurrent();
             long dexHandles = GetTotalHandles("SamsungDeX");
             long imageSaferHandles = GetTotalHandles("IMGSF50Svc");
 
@@ -2836,7 +2847,7 @@ namespace TheOnePcCare
                 report.AppendLine("· 노트북 보조 작업: Glance " + glanceCount + "개 / 휴대폰 연결 " + crossDeviceCount + "개");
             if (ProfileDetector.Current == DeviceProfile.OfficeCorea || GetServiceStatusText("RicohDeviceSoftwareManager") != "미설치")
                 report.AppendLine("· RICOH 관리 " + GetServiceStatusText("RicohDeviceSoftwareManager") + " / Windows 검색 " + GetServiceStatusText("WSearch") + " / 검색 호스트 " + searchHostCount + "개");
-            if (sttActive) report.AppendLine("· 중요 작업: 법률 녹취 자동전사(STT)가 실행 중");
+            if (sttActive) report.AppendLine("· 중요 작업: 법률 녹취 자동전사(STT) · " + (sttIdleManaged ? GetSttIdlePolicyDisplay() : "수동 보호 중"));
 
             report.AppendLine();
             report.AppendLine("실행 예정");
@@ -2853,7 +2864,9 @@ namespace TheOnePcCare
                 : "· Everything이 없어 Windows 검색색인은 유지");
             report.AppendLine("· Robocopy는 종료하지 않고 우선순위만 낮춤");
             report.AppendLine(sttActive
-                ? "· 법률 녹취 STT는 다음 확인창에서 동의할 때만 일시중지"
+                ? (sttIdleManaged
+                    ? "· 법률 녹취 STT는 PC 사용 중 대기하고 10분 무입력 후 자동 재개"
+                    : "· 법률 녹취 STT는 다음 확인창에서 동의할 때만 일시중지")
                 : "· 확인되지 않은 Python 작업은 종료하지 않고 우선순위만 낮춤");
             if (ProfileDetector.Current == DeviceProfile.Laptop)
                 report.AppendLine("· Glance·휴대폰 연결은 종료하지 않고 우선순위만 낮춤");
@@ -2917,7 +2930,9 @@ namespace TheOnePcCare
             }
 
             if (IsSttTranscriptionActive())
-                actions.Add(pauseStt ? PauseSttTranscription() : "[중요 작업 보호] 법률 녹취 자동전사(STT)를 계속 실행했습니다.");
+                actions.Add(IsSttIdlePolicyCurrent()
+                    ? "[전사 자동관리] " + GetSttIdlePolicyDisplay() + " — PC 사용 중 대기 / 10분 무입력 후 자동 재개 정책을 유지했습니다."
+                    : (pauseStt ? PauseSttTranscription() : "[중요 작업 보호] 법률 녹취 자동전사(STT)를 계속 실행했습니다."));
 
             actions.Add("[보호] Google Drive·Windows 보안·금융 보안·브라우저·Office는 변경하지 않았습니다.");
             return string.Join(Environment.NewLine, actions.ToArray());
@@ -3078,6 +3093,7 @@ namespace TheOnePcCare
 
         public static bool IsSttTranscriptionActive()
         {
+            if (IsSttIdlePolicyCurrent()) return true;
             try
             {
                 using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE Name='pythonw.exe'"))
@@ -3093,6 +3109,45 @@ namespace TheOnePcCare
             }
             catch { }
             return false;
+        }
+
+        private static string SttIdleStatusPath
+        {
+            get { return @"C:\DriveBackupLog\stt_idle_status.json"; }
+        }
+
+        public static bool IsSttIdlePolicyCurrent()
+        {
+            try
+            {
+                if (!File.Exists(SttIdleStatusPath)) return false;
+                string text = File.ReadAllText(SttIdleStatusPath, Encoding.UTF8);
+                if (text.IndexOf("keyboard_mouse_idle_gate", StringComparison.OrdinalIgnoreCase) < 0) return false;
+                Match match = Regex.Match(text, "\\\"updated\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
+                DateTime updated;
+                return match.Success && DateTime.TryParse(match.Groups[1].Value, out updated) &&
+                    DateTime.Now - updated < TimeSpan.FromSeconds(20);
+            }
+            catch { return false; }
+        }
+
+        public static string GetSttIdlePolicyDisplay()
+        {
+            try
+            {
+                if (!File.Exists(SttIdleStatusPath)) return "상태 확인 중";
+                string text = File.ReadAllText(SttIdleStatusPath, Encoding.UTF8);
+                Match stateMatch = Regex.Match(text, "\\\"state\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
+                Match idleMatch = Regex.Match(text, "\\\"idle_seconds\\\"\\s*:\\s*([0-9.]+)");
+                string state = stateMatch.Success ? stateMatch.Groups[1].Value : "";
+                double idle = 0;
+                if (idleMatch.Success) double.TryParse(idleMatch.Groups[1].Value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out idle);
+                if (state == "waiting_for_idle") return "PC 사용 중 대기 · 무입력 " + Math.Floor(idle / 60).ToString("0") + "분";
+                if (state == "running") return "10분 유휴 확인 · 전사 실행 중";
+                if (state == "completed") return "전사 대기열 완료";
+            }
+            catch { }
+            return "전사 자동관리 상태 확인 중";
         }
 
         private static string PauseSttTranscription()

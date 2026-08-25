@@ -8,9 +8,9 @@
 
 [최신 릴리스에서 실행파일 내려받기](https://github.com/meta-theone/theone-pc-care/releases/latest)
 
-- `TheOne-PC-Care-Laptop-v3.0.0.exe`: 노트북 프로필 고정
-- `TheOne-PC-Care-Desktop-v3.0.0.exe`: 데스크톱 프로필 고정
-- `TheOne-PC-Care-Auto-v3.0.0.exe`: 장치 유형 자동 판별
+- `TheOne-PC-Care-Laptop-v3.1.0.exe`: 노트북 프로필 고정
+- `TheOne-PC-Care-Desktop-v3.1.0.exe`: 데스크톱 프로필 고정
+- `TheOne-PC-Care-Auto-v3.1.0.exe`: 장치 유형 자동 판별
 
 GitHub 호환성을 위해 릴리스 자산은 영문 파일명을 사용합니다. OneDrive 공용 폴더에는 같은 파일을 알아보기 쉬운 한글 이름으로 보관합니다.
 
@@ -20,12 +20,13 @@ GitHub 호환성을 위해 릴리스 자산은 영문 파일명을 사용합니�
 
 - CPU·RAM·메모리 커밋·디스크·시스템 핸들·C 드라이브 여유 실시간 표시
 - 실시간 CPU 상위 프로세스 3개 표시
+- 연동된 전사 작업의 10분 무입력 자동대기·재개 상태 표시
 - OneDrive 핸들 폭주 시에만 안전 재시작
 - Windows 탐색기 핸들·스레드 폭주 시 작업표시줄 자동 복구와 함께 재시작
 - Everything 사용 PC에서 Windows 검색색인 일시정지
 - RICOH 자동관리 서비스가 설치된 PC에서 관리 모듈만 일시정지
 - Robocopy·확인되지 않은 Python 작업은 종료하지 않고 우선순위만 낮춤
-- 중요 작업은 정체를 표시하고 별도 동의를 받은 경우에만 일시중지
+- 유휴관리 기능이 없는 중요 작업은 정체를 표시하고 별도 동의를 받은 경우에만 일시중지
 - 진단 보고서 저장 및 실행 기록 제공
 
 ## 안전 원칙
